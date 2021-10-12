@@ -1,0 +1,6 @@
+deBWT/
+*.o
+*.out
+*.output
+.vscode/
+*.swap

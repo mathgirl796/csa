@@ -8,12 +8,13 @@
 void QuickSortRecursive(long* array, long l, long r, int (*CmpFunc)(long, long), long (*QuickSortPartition)(long* array, long l, long r, int (*CmpFunc)(long, long)));
 
 
-long* QuickSort(long num_elements, int (*CmpFunc)(long, long), long (*QuickSortPartition)(long* array, long l, long r, int (*CmpFunc)(long, long))) {
+long* QuickSort(long start_pos, long end_pos, int (*CmpFunc)(long, long), long (*QuickSortPartition)(long* array, long l, long r, int (*CmpFunc)(long, long))) {
     /* 为将要返回的数组申请内存、初始化 */
+    long num_elements = end_pos - start_pos;
     long* ret = malloc(num_elements * sizeof(long));
-    for (long i = 0; i < num_elements; ++i) 
-        ret[i] = i;
-
+    for (long i = start_pos; i < end_pos; ++i) {
+        ret[i - start_pos] = i;
+    }
     QuickSortRecursive(ret, 0, num_elements-1, CmpFunc, QuickSortPartition);
     return ret;
 }

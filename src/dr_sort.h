@@ -6,7 +6,8 @@
     sort an index array [0, 1, 2, ..., num_elements-1] by CmpFun
 
     input:
-        num_elements: number of elements you want to sort
+        start_pos: start index of elements you want to sort in your CmpFunc
+        end_pos: similar to start_pos, elements whose index in [start_pos, end_pos) will be sort
         CmpFun: input left_pos l and right_pos r, return 0 if elements[l] == elements[r], -1 if <, 1 if >
             l and r should be meaningful for all intergers between 0 and num_elements-1
         QuickSortPartition: how to do detailed partition
@@ -14,11 +15,13 @@
     output:
         array of type LONG of size num_elements, represent sort result
 
+    warning: please insure your start_pos and end_pos legal
+
     example:
         input 5, CmpFun is string compare of "shit$"'s suffixes
         output: [4, 2, 1, 0, 3], represents: ["$", "it$", "hit$", "shit$", "t$"]
 */
-long* QuickSort(long num_elements, int (*CmpFunc)(long, long), long (*QuickSortPartition)(long* array, long l, long r, int (*CmpFunc)(long, long)));
+long* QuickSort(long start_pos, long end_pos, int (*CmpFunc)(long, long), long (*QuickSortPartition)(long* array, long l, long r, int (*CmpFunc)(long, long)));
 
 /*
     Provided for default occation of QuickSort

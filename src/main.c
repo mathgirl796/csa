@@ -6,7 +6,7 @@
 #include "dr_tools.h"
 #include "dr_sort.h"
 
-long A[10] = {5,7,3,5,6,2,5,0,9,1};
+long A[10] = {5,7,3,8,6,2,4,0,9,1};
 int cmp(long l, long r) {
     if (A[l] < A[r]) return -1;
     else if (A[l] == A[r]) return 0;
@@ -71,45 +71,59 @@ int main() {
     // }
 
     /* 测试：快速排序10个整数 */
-    // long* sorted_index = QuickSort(10, cmp, SimpleQuickSortPartition);
+    // printf("index:\t\t");
+    // for (int i = 0; i < 10; ++i) printf("%d ", i);
+    // printf("\n");
+    // printf("unsorted array:\t");
+    // for (int i = 0; i < 10; ++i) printf("%ld ", A[i]);
+    // printf("\n");
+    // printf("sort 0-10:\t");
+    // long* sorted_index = QuickSort(0, 10, cmp, SimpleQuickSortPartition);
     // for (int i = 0; i < 10; ++i) printf("%ld ", A[sorted_index[i]]);
-    // puts("");
+    // printf("\n");
+    // printf("sort 3-8:\t");
+    // sorted_index = QuickSort(3, 8, cmp, SimpleQuickSortPartition);
+    // for (int i = 0; i < 10; ++i) {
+    //     if (3 <= i && i < 8) printf("%ld ", A[sorted_index[i - 3]]);
+    //     else printf("%ld ", A[i]);
+    // }
+    // printf("\n");
 
     /* 测试：快速排序NC_008253.fna */
-    char* NC_008253FilePath = "/root/bioinformatics/lab1/data/NC_008253.fna";
-    long NC_008253Length = CountFasta(NC_008253FilePath)[1];
-    FILE* f_NC_008253 = fopen(NC_008253FilePath, "r");
-    char c;
-    long pos = -1;
-    while ((c = fgetc(f_NC_008253)) != '\n' && c != EOF); // 读掉第一行
-    char* NC_008253String = malloc(NC_008253Length * sizeof(char)); // 申请内存放置源字符串
-    while ((c = fgetc(f_NC_008253)) != EOF) {
-        if (c == 'A' || c == 'a' || c == 'C' || c == 'c' || c == 'G' || c == 'g' || c == 'T' || c == 't')
-            NC_008253String[++pos] = c;
-        else
-            continue;
-    }
-    printf("NC_008253String length: %ld\n", strlen(NC_008253String));
-    long NC_008253CompressedLength = NC_008253Length;
-    char* NC_008253CompressedString = CompressBase(NC_008253String, &NC_008253CompressedLength); // 压缩字符串
-    printf("compressed length: %ld\n", NC_008253CompressedLength);
-    compressedCmp = NC_008253CompressedString;
-    compressedCmpLen = NC_008253CompressedLength;
+    // char* NC_008253FilePath = "/root/bioinformatics/lab1/data/NC_008253.fna";
+    // long NC_008253Length = CountFasta(NC_008253FilePath)[1];
+    // FILE* f_NC_008253 = fopen(NC_008253FilePath, "r");
+    // char c;
+    // long pos = -1;
+    // while ((c = fgetc(f_NC_008253)) != '\n' && c != EOF); // 读掉第一行
+    // char* NC_008253String = malloc(NC_008253Length * sizeof(char)); // 申请内存放置源字符串
+    // while ((c = fgetc(f_NC_008253)) != EOF) {
+    //     if (c == 'A' || c == 'a' || c == 'C' || c == 'c' || c == 'G' || c == 'g' || c == 'T' || c == 't')
+    //         NC_008253String[++pos] = c;
+    //     else
+    //         continue;
+    // }
+    // printf("NC_008253String length: %ld\n", strlen(NC_008253String));
+    // long NC_008253CompressedLength = NC_008253Length;
+    // char* NC_008253CompressedString = CompressBase(NC_008253String, &NC_008253CompressedLength); // 压缩字符串
+    // printf("compressed length: %ld\n", NC_008253CompressedLength);
+    // compressedCmp = NC_008253CompressedString;
+    // compressedCmpLen = NC_008253CompressedLength;
 
-    printf("start compute SA...\n");
-    clock_t time = clock();
-    long* NC_008253SA = QuickSort(NC_008253CompressedLength, CmpCompressedSuffix, SimpleQuickSortPartition);
-    time = clock() - time;
-    printf("compute SA time: %lfs\n", (double)time / CLOCKS_PER_SEC);
+    // printf("start compute SA...\n");
+    // clock_t time = clock();
+    // long* NC_008253SA = QuickSort(0, NC_008253CompressedLength, CmpCompressedSuffix, SimpleQuickSortPartition);
+    // time = clock() - time;
+    // printf("compute SA time: %lfs\n", (double)time / CLOCKS_PER_SEC);
 
-    printf("start print partial result\n");
-    for (int i = 0; i < NC_008253CompressedLength; i++) {
-        if (0 <= i && i <= 999) {
-            printf("%-.100s\n", NC_008253String + NC_008253SA[i]);
-        }
-    }
-    printf("end print partial result\n");
-    fclose(f_NC_008253);
+    // printf("start print partial result\n");
+    // for (int i = 0; i < NC_008253CompressedLength; i++) {
+    //     if (0 <= i && i <= 999) {
+    //         printf("%-.100s\n", NC_008253String + NC_008253SA[i]);
+    //     }
+    // }
+    // printf("end print partial result\n");
+    // fclose(f_NC_008253);
 
     return 0;
 }
