@@ -84,4 +84,13 @@ long BinarySeachRightBoundLessEqualTarget(long start_pos, long end_pos, const vo
     if (CmpFunc(target, start_pos) < 0) return BINARY_SEARCH_NOT_FOUND;
 
     long left = start_pos;
+    long right = end_pos;
+    while (left < right) {
+        long mid = left + (right - left) / 2;
+        if (CmpFunc(target, mid) == 0) left = mid + 1;
+        else if (CmpFunc(target, mid) > 0) left = mid + 1;
+        else if (CmpFunc(target, mid) < 0) right = mid;
+    }
+
+    return left - 1;
 }

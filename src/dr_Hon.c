@@ -77,7 +77,7 @@ long** HonSaPsi(const char* compressedString, long length) {
             for (tag_pos = 0; tag_pos < 4; ++tag_pos){
                 if (target[tag_pos] == c) break;
             }
-            BinarySeachRightBoundLessEqualTarget(tag[tag_pos], tag[tag_pos+1], &lastOrder, TODOCmpFunc);
+            // BinarySeachRightBoundLessEqualTarget(tag[tag_pos], tag[tag_pos+1], &lastOrder, TODOCmpFunc);
         }
 
         /* computer the pai function for T^iT' */

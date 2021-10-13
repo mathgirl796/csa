@@ -137,7 +137,7 @@ void testQuickNC_008253_fna() {
     free(NC_008253SA);
 }
 
-int bsArray[10] = {1, 1, 4, 4, 4, 5, 7, 9, 9, 9};
+int bsArray[10] = {0, 2, 4, 4, 4, 6, 7, 9, 9, 9};
 int BSIntCmpFunc(const void* target, long pos) {
     int t = *(int*)target;
     if (t > bsArray[pos]) return 1;
@@ -145,9 +145,10 @@ int BSIntCmpFunc(const void* target, long pos) {
     else if (t == bsArray[pos]) return 0;
 }
 void testBinarySearch() {
-    int target = 6;
+    int target = 10;
     printf("testBinarySearch: %ld\n", BinarySearchLeftBound(0, 10, &target, BSIntCmpFunc));
     printf("testBinarySearch: %ld\n", BinarySearchRightBound(0, 10, &target, BSIntCmpFunc));
+    printf("testBinarySearch: %ld\n", BinarySeachRightBoundLessEqualTarget(0, 10, &target, BSIntCmpFunc));
 }
 
 void testHonSaPsi() {
@@ -197,7 +198,7 @@ int main() {
     // testCompressDecompressRetrieve();
     // testQuickSort10Intergers();
     // testQuickNC_008253_fna();
-    // testBinarySearch();
-    testHonSaPsi();
+    testBinarySearch();
+    // testHonSaPsi();
     return 0;
 }
