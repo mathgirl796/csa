@@ -44,7 +44,7 @@ char RetrieveCompressBase(const char* compressedString, long pos);
     function: return (long)cell(byteStringLength / 4.0)
     implemented by logic, without float type
 */
-long Computer2BitStrLength(long byteStringLength);
+long Compute2BitStrLength(long byteStringLength);
 
 /*
     quick sort a compressed acgt string to get its SA.
@@ -71,6 +71,30 @@ long Computer2BitStrLength(long byteStringLength);
 */
 long* CountFasta(const char* filePath);
 
+/*
+    build SA for compressedString
 
+    input:
+        compressedString: see function CompressBase
+        start_pos: 0-base start position you want to begin your sort in original string
+        length: the number of base start from start_pos you want to sort
+    output: LONG array SA whose size is length + 1, with SA[0] = length correspond to '$'
+        it is a permutation of [0, length]
+*/
+long* BuildSA_QuickSort(const char* compressedString, long start_pos, long length);
+
+/*
+    build Psi array from an SA
+
+    input: 
+        compressedString: source string of SA, used to do binary search
+        start_pos: start position in the compressedString where your SA comes from
+        SA: output of function BuildSA_QuickSort
+        length: length of origin string where your SA comes from
+
+    output: LONG array Psi whose size is the same as SA, Psi[0] = SA^(-1)[0]
+        it is a permutation of [0, length]
+*/
+long* BuildPsi_BinarySearch(const char* compressedString, long start_pos, const long* SA, long length);
 
 #endif

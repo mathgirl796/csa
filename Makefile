@@ -11,7 +11,7 @@ all:
 	mv a.out ../a.out  
         
 a.out:$(obj)
-	gcc $^ -o $@
+	gcc $^ -o $@ -lm
 
 .c.o:
 	gcc -c $<

@@ -1,10 +1,11 @@
 #include <stdio.h>
+#include <limits.h>
 
 int main(){
 
-    unsigned char a = 124;
-    printf("%d\n", a << 4 >> 6);
-    printf("%-10s\n", "123");
-    printf("%-.3s\n", "qwertyuioplkjhgfdsaaaaaaaaaaaaaaa");
+    int a = 1;
+    int b = 2;
+    const int *p = &a;
+    p = &b;
     return 0;
 }

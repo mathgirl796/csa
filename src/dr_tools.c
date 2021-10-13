@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
+#include "dr_sort.h"
 
 void Hello(void) {
     printf("Hello, world!\n");
@@ -53,7 +54,7 @@ long* CountFasta(const char* filePath) {
 }
 
 
-long Computer2BitStrLength(long byteStringLength) {
+long Compute2BitStrLength(long byteStringLength) {
     return (byteStringLength % 4 == 0) ? byteStringLength / 4 : byteStringLength / 4 + 1;
 }
 
@@ -62,7 +63,7 @@ long Computer2BitStrLength(long byteStringLength) {
 char* CompressBase(const char* acgtString, long* length) {
     long strLength = strlen(acgtString);
     long realStringLength = strLength > *length ? strLength : *length;
-    long retStringLength = Computer2BitStrLength(realStringLength);
+    long retStringLength = Compute2BitStrLength(realStringLength);
     char* ret = malloc(retStringLength * sizeof(char));
 
     long sPos = -1; // pos of acgtString
@@ -146,5 +147,68 @@ char RetrieveCompressBase(const char* compressedString, long pos) {
     return ret;
 }
 
+const char* BuildSA_QuickSort_CompressedArray = NULL;
+long BuildSA_QuickSort_MaxCmpPos = 0;
+int BuildSA_QuickSort_CmpFunc(long l, long r) {
+    while (l < BuildSA_QuickSort_MaxCmpPos && r < BuildSA_QuickSort_MaxCmpPos) {
+        char lchar = RetrieveCompressBase(BuildSA_QuickSort_CompressedArray, l);
+        char rchar = RetrieveCompressBase(BuildSA_QuickSort_CompressedArray, r);
+        if (lchar < rchar) return -1;
+        else if (lchar > rchar) return 1;
+        else {l++; r++;}
+    }
+    if (l > r) return -1;
+    else if (l < r) return 1;
+    else {
+        fprintf(stderr, "BuildSA_QuickSort_CmpFunc: equal happens when compare suffixes!\n");
+        exit(1);
+    }
+}
+long* BuildSA_QuickSort(const char* compressedString, long start_pos, long length) {
+    BuildSA_QuickSort_CompressedArray = compressedString;
+    BuildSA_QuickSort_MaxCmpPos = start_pos + length;
+    long* quickSortResult = QuickSort(start_pos, start_pos+length, BuildSA_QuickSort_CmpFunc, SimpleQuickSortPartition);
+    for (long i = 0; i < length; ++i) quickSortResult[i] -= start_pos;
+    long* SA = malloc(sizeof(long) * (length + 1));
+    SA[0] = length;
+    memcpy(SA + 1, quickSortResult, sizeof(long) * length);    
+    free(quickSortResult);
+    return SA;
+}
 
-// long* QuickSortSaFromCs(const char* cprString, long start, long length) {}
+const char* BuildPsi_BinarySearch_CompressedArray = NULL;
+long BuildPsi_BinarySearch_CompressedString_MaxCmpPos = 0;
+const long* BuildPsi_BinarySearch_SA = NULL;
+long BuildPsi_BinarySearch_CompressedString_StartPos = 0;
+// target指向字符串的某个下标， pos是SA数组的某个下标
+int BuildPsi_BinarySearch_CmpFunc(const void* target, long pos) {
+    long l = *(long*)target;
+    long r = BuildPsi_BinarySearch_SA[pos] + BuildPsi_BinarySearch_CompressedString_StartPos;
+    // printf("%ld %ld\n", l, r); // 打印调试信息
+    while (l < BuildPsi_BinarySearch_CompressedString_MaxCmpPos && r < BuildPsi_BinarySearch_CompressedString_MaxCmpPos) {
+        char lchar = RetrieveCompressBase(BuildPsi_BinarySearch_CompressedArray, l);
+        char rchar = RetrieveCompressBase(BuildPsi_BinarySearch_CompressedArray, r);
+        if (lchar < rchar) return -1;
+        else if (lchar > rchar) return 1;
+        else {l++; r++;}
+    }
+    if (l > r) return -1;
+    else if (l < r) return 1;
+    else return 0;
+}
+long* BuildPsi_BinarySearch(const char* compressedString, long start_pos, const long* SA, long length) {
+    BuildPsi_BinarySearch_CompressedArray = compressedString;
+    BuildPsi_BinarySearch_CompressedString_StartPos = start_pos;
+    BuildPsi_BinarySearch_CompressedString_MaxCmpPos = start_pos + length;
+    BuildPsi_BinarySearch_SA = SA;
+    long SA_size = length + 1;
+    long* psi = malloc(sizeof(long) * (length + 1));
+    long target = start_pos;
+    /* psi[0]是特殊情况 */
+    psi[0] = BinarySearch(0, SA_size, &target, BuildPsi_BinarySearch_CmpFunc);
+    for (long i = 1; i < SA_size; ++i) {
+        target = SA[i] + 1 + start_pos;
+        psi[i] = BinarySearch(0, SA_size, &target, BuildPsi_BinarySearch_CmpFunc);
+    }
+    return psi;
+}
