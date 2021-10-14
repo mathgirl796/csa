@@ -97,4 +97,16 @@ long* BuildSA_QuickSort(const char* compressedString, long start_pos, long lengt
 */
 long* BuildPsi_BinarySearch(const char* compressedString, long start_pos, const long* SA, long length);
 
+
+/*
+    find RANK[target] in a psi array
+
+    input:
+        psi: a permutation of [0, length]
+        length: length of string where your psi comes from
+        target: target in [0, length], represents start_pos in a acgt string 
+    output:
+        RANK[target] of the SA correspond to your psi
+*/
+long RetriveRankFromPsi(const long* psi, long target);
 #endif

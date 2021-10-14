@@ -212,3 +212,11 @@ long* BuildPsi_BinarySearch(const char* compressedString, long start_pos, const 
     }
     return psi;
 }
+
+long RetriveRankFromPsi(const long* psi, long target) {
+    long rank = 0;
+    for (int i = 0; i < target + 1; ++i) {
+        rank = psi[rank];
+    }
+    return rank;
+}

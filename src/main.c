@@ -198,7 +198,7 @@ int main() {
     // testCompressDecompressRetrieve();
     // testQuickSort10Intergers();
     // testQuickNC_008253_fna();
-    testBinarySearch();
-    // testHonSaPsi();
+    // testBinarySearch();
+    testHonSaPsi();
     return 0;
 }
