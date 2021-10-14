@@ -64,12 +64,13 @@ long** HonSaPsi(const char* compressedString, long length) {
     
     for (; new_block_start_pos >= 0; new_block_start_pos -= lNormalSegmentLength) {
         /*调试信息*/ printf("************************** 新块起始位置:%ld ************************\n", new_block_start_pos);
-                    printf("新块内容："); for(int i = new_block_start_pos;  i < new_block_start_pos + lNormalSegmentLength; ++i){printf("%c", RetrieveCompressBase(compressedString, i));}printf("\n");
+                    printf("新块内容: ");for(int i = new_block_start_pos;  i < new_block_start_pos + lNormalSegmentLength; ++i){printf("%c", RetrieveCompressBase(compressedString, i));}printf("\n");
+                    printf("即将处理: ");for(int i = new_block_start_pos;  i < length ; ++i){printf("%c", RetrieveCompressBase(compressedString, i));}printf("\n");
         /* sort the suffixes suf_1, suf_2, ..., suf_l */
         SA_Ti = BuildSA_QuickSort(compressedString, new_block_start_pos, lNormalSegmentLength);
         psi_Ti = BuildPsi_BinarySearch(compressedString, new_block_start_pos, SA_Ti, lNormalSegmentLength);
-        /* 调试信息：SA_Ti的内容 */printf("SA_Ti\t");for(int i=0;i<lNormalSegmentLength+1;++i){printf("%ld ",SA_Ti[i]);}printf("\n");
-                                printf("psi_Ti\t");for(int i=0;i<lNormalSegmentLength+1;++i){printf("%ld ",psi_Ti[i]);}printf("\n");
+        /* 调试信息：SA_Ti的内容 */printf("psi_Ti\t");for(int i=0;i<lNormalSegmentLength+1;++i){printf("%ld ",psi_Ti[i]);}printf("\n");
+                                printf("SA_Ti\t");for(int i=0;i<lNormalSegmentLength+1;++i){printf("%ld ",SA_Ti[i]);}printf("\n");
         /*调试信息：使debug停在特定的循环节点*/
         if (new_block_start_pos == 200){
             int a = 1;
@@ -108,6 +109,7 @@ long** HonSaPsi(const char* compressedString, long length) {
         //// compute f and g
         long* f = malloc(sizeof(long) * (TprimeLength+1));
         long* g = malloc(sizeof(long) * (lNormalSegmentLength+1));
+        ////// compute f
         for (long j = 0; j <= TprimeLength; ++j) {
             long count = 0;
             for (long k = 1; k <= lNormalSegmentLength; ++k) {
@@ -115,14 +117,15 @@ long** HonSaPsi(const char* compressedString, long length) {
             }
             f[j] = j + count;
         }
-        /*调试信息：f*/for (long j = 1; j < TprimeLength; ++j){printf("f[%ld]:%ld ", j, f[j]);}printf("\n");
-        
+        ////// compute g
         long rank = 0;
         for (long j = 1; j <= lNormalSegmentLength; ++j) {
             rank = psi_Ti[rank];
             g[j] = order[j] + rank;
         }
-        /*调试信息：g, rank*/for (long j = 1; j <= lNormalSegmentLength; ++j){printf("g[%ld]:%ld ", j, g[j]);}printf("\n");
+        /*调试信息：order*/for (long j = 1; j <= lNormalSegmentLength; ++j){printf("order(%ld):%ld\t", j, order[j]);}printf("\n");
+        /*调试信息：f*/for (long j = 1; j < TprimeLength; ++j){printf("f[%ld]:%ld ", j, f[j]);}printf("\n");
+        /*调试信息：g*/for (long j = 1; j <= lNormalSegmentLength; ++j){printf("g[%ld]:%ld ", j, g[j]);}printf("\n");
 
         //// merge and update lastOrder
         long* tempPsi_TiTprime = malloc(sizeof(long) * (TprimeLength + lNormalSegmentLength + 1)); // 这个指针不要释放，它会被赋给一个上层变量，最后会被返回
@@ -155,7 +158,7 @@ long** HonSaPsi(const char* compressedString, long length) {
         /*调试信息*/printf("merge后的SA_Tprime:\t");for (long i = 0; i < TprimeLength; ++i) {printf("%ld ", SA_Tprime[i]);}printf("\n");
 
         // /*调试信息*/break;
-        // getchar();
+        getchar();
     }
 
     /* 释放临时变量 */
