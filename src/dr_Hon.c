@@ -51,11 +51,15 @@ long** HonSaPsi(const char* compressedString, long length) {
     long* order = malloc(sizeof(long) * (lNormalSegmentLength + 1));
     long new_block_start_pos;
     long TprimeLength;
-    long* tempPsi_TiTprime = NULL;
+    long* tempPsi_TiTprime = malloc(sizeof(long) * (length + 1));
+    long* f = malloc(sizeof(long) * (length + 1));
+    long* g = malloc(sizeof(long) * (lNormalSegmentLength + 1));
 
     // 处理第一块
     SA_Tprime = BuildSA_QuickSort(compressedString, length - lLastSegmentLength, lLastSegmentLength);
     psi_Tprime = BuildPsi_BinarySearch(compressedString, length - lLastSegmentLength, SA_Tprime, lLastSegmentLength);
+    SA_Tprime = realloc(SA_Tprime, sizeof(long) * (length + 1));
+    psi_Tprime = realloc(psi_Tprime, sizeof(long) * (length + 1));
     // /*调试信息*/printf("first psi_Tprime");for (long i = 0; i < lLastSegmentLength + 1; ++i) {printf("%ld ", psi_Tprime[i]);} printf("\n");
     new_block_start_pos = length - lLastSegmentLength - lNormalSegmentLength;
     TprimeLength = lLastSegmentLength + 1;
@@ -155,9 +159,6 @@ long** HonSaPsi(const char* compressedString, long length) {
         }
         /* computer the pai function for T^iT' */
         //// compute f and g
-        long* f = malloc(sizeof(long) * (TprimeLength + 1));
-        long* g = malloc(sizeof(long) * (lNormalSegmentLength + 1));
-        
         ////// compute f
         for (long j = 0; j <= TprimeLength; ++j) {
             long count = 0;
@@ -193,7 +194,6 @@ long** HonSaPsi(const char* compressedString, long length) {
         // /*调试信息：g*/for (long j = 1; j <= lNormalSegmentLength; ++j){printf("g[%ld]:%ld ", j, g[j]);}printf("\n");
 
         //// merge and update lastOrder
-        tempPsi_TiTprime = malloc(sizeof(long) * (TprimeLength + lNormalSegmentLength + 1)); // 这个指针不要释放，它会被赋给一个上层变量，最后会被返回
         tempPsi_TiTprime[0] = g[1];
         tempPsi_TiTprime[g[lNormalSegmentLength]] = f[psi_Tprime[0]];
         for (long j = 1; j < TprimeLength; ++j) {
@@ -203,13 +203,12 @@ long** HonSaPsi(const char* compressedString, long length) {
             tempPsi_TiTprime[g[j]] = g[j+1];
         }
         // /*调试信息*/printf("psi_Tprime\t");for(int i=0;i<TprimeLength;i++){printf("%ld ",psi_Tprime[i]);}printf("\n");
-        free(psi_Tprime);
-        psi_Tprime = tempPsi_TiTprime;
+        long* tempSwitchPsi = tempPsi_TiTprime;
+        tempPsi_TiTprime = psi_Tprime;
+        psi_Tprime = tempSwitchPsi;
         lastOrder = psi_Tprime[0];
         TprimeLength += lNormalSegmentLength;
-        /* 释放临时内存 */
-        free(f);
-        free(g);
+        
         if (log_flag == 1 && debug_flag) {
             printf("%lfs\n", (double)(time_merge) / CLOCKS_PER_SEC);
             time_merge = 0;
@@ -220,7 +219,7 @@ long** HonSaPsi(const char* compressedString, long length) {
         }
 
         /* 根据merge后的psi_Tprime构造新的SA_Tprime */
-        SA_Tprime = realloc(SA_Tprime, sizeof(long) * TprimeLength);
+        // SA_Tprime = realloc(SA_Tprime, sizeof(long) * TprimeLength);
         long mergeSA_pos = 0;
         for (long i = 0; i < TprimeLength; ++i) {
             mergeSA_pos = psi_Tprime[mergeSA_pos];
@@ -238,6 +237,9 @@ long** HonSaPsi(const char* compressedString, long length) {
     free(SA_Ti);
     free(psi_Ti);
     free(order);
+    free(f);
+    free(g);
+    free(tempPsi_TiTprime);
     
     /* 返回结果 */
     long** result = malloc(sizeof(long*) * 2);
