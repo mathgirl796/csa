@@ -98,9 +98,8 @@ int CmpCompressedSuffix(long l, long r) {
     }
 }
 void testQuickNC_008253_fna() {
-    printf("test QuickSort build SA and psi for NC_008253_fna\n");
+    printf("**********test QuickSort build SA and psi for NC_008253_fna\n");
     char* NC_008253FilePath = "/root/bioinformatics/lab1/data/NC_008253.fna";
-    // char* NC_008253FilePath = "/root/bioinformatics/lab1/test.fna";
     long NC_008253Length = CountFasta(NC_008253FilePath)[1];
     printf("NC_008253String length: %ld\n", NC_008253Length);
     FILE* f_NC_008253 = fopen(NC_008253FilePath, "r");
@@ -108,14 +107,27 @@ void testQuickNC_008253_fna() {
     long pos = -1;
     while ((c = fgetc(f_NC_008253)) != '\n' && c != EOF); // 读掉第一行
     char* NC_008253String = malloc(NC_008253Length * sizeof(char)+1); // 申请内存放置源字符串
-    while ((c = fgetc(f_NC_008253)) != EOF && pos <= NC_008253Length-1) {
-        if (c == 'A' || c == 'a' || c == 'C' || c == 'c' || c == 'G' || c == 'g' || c == 'T' || c == 't'){
+    long l_x[4] = {0};
+    while ((c = fgetc(f_NC_008253)) != EOF && pos <= NC_008253Length) {
+        if (c == 'A' || c == 'a' || c == 'C' || c == 'c' || c == 'G' || c == 'g' || c == 'T' || c == 't') {
             NC_008253String[++pos] = c;
-            // printf("%ld ", pos);
-        }   
+            if (c == 'A' || c == 'a') {
+                l_x[0] ++;
+            }
+            else if (c == 'C' || c == 'c') {
+                l_x[1] ++;
+            }
+            else if (c == 'G' || c == 'g') {
+                l_x[2] ++;
+            }
+        }
         else
             continue;
     }
+    l_x[3] = 1 + l_x[2] + l_x[1] + l_x[0];
+    l_x[2] = 1 + l_x[1] + l_x[0];
+    l_x[1] = 1 + l_x[0];
+    l_x[0] = 0;
     NC_008253String[++pos] = '\0';
     long NC_008253CompressedLength = NC_008253Length;
     char* NC_008253CompressedString = CompressBase(NC_008253String, &NC_008253CompressedLength); // 压缩字符串
@@ -128,12 +140,25 @@ void testQuickNC_008253_fna() {
     long* NC_008253SA = QuickSort(0, NC_008253CompressedLength, CmpCompressedSuffix, SimpleQuickSortPartition);
     long* NC_008253SA_amend = malloc(sizeof(long) * (NC_008253CompressedLength + 1));
     NC_008253SA_amend[0] = NC_008253CompressedLength;
-    memcpy(NC_008253SA_amend, NC_008253SA, sizeof(long) * NC_008253CompressedLength);
+    memcpy(NC_008253SA_amend + 1, NC_008253SA, sizeof(long) * NC_008253CompressedLength);
     clock_t time1 = clock() - time;
-    printf("compute SA over: %lf\n", (double)time1 / CLOCKS_PER_SEC);
+    printf("compute SA over: %lfs\n", (double)time1 / CLOCKS_PER_SEC);
     long* psi = BuildPsi_BinarySearch(NC_008253CompressedString, 0, NC_008253SA_amend, NC_008253CompressedLength);
     clock_t time2 = clock() - time;
     printf("compute SA and psi time: %lfs\n", (double)time2 / CLOCKS_PER_SEC);
+    printf("checking answer...\n");
+    char* rebuildedString = BuildStrFromPsi(psi, NC_008253Length, "ACGT", l_x);
+    // printf("truth\t%s\n", NC_008253String);
+    // printf("yours\t%s\n", rebuildedString);
+    // printf("your SA:\t"); for (long i = 0; i < NC_008253Length + 1; ++i) {printf("%ld\t", NC_008253SA_amend[i]);} printf("\n");
+    long i;
+    for (i = 0; i < NC_008253Length; ++i) {
+        if (rebuildedString[i] != NC_008253String[i]) {
+            fprintf(stderr, "false at pos %ld!\n", i);
+            break;
+        }
+    }
+    if (i == NC_008253Length) printf("answer is right!\n");
 
     // printf("start print partial result\n");
     // for (int i = 0; i < NC_008253CompressedLength; i++) {
@@ -165,21 +190,35 @@ void testBinarySearch() {
 }
 
 void testHonSaPsi() {
-    printf("test Hon build SA and psi for NC_008253_fna\n");
-    // char* NC_008253FilePath = "/root/bioinformatics/lab1/test.fna";
-    char* NC_008253FilePath = "/root/bioinformatics/lab1/data/NC_008253.fna";
+    printf("**********test Hon build SA and psi for NC_008253_fna\n");
+    char* NC_008253FilePath = "/root/bioinformatics/lab1/data/test.fna";
     long NC_008253Length = CountFasta(NC_008253FilePath)[1];
     FILE* f_NC_008253 = fopen(NC_008253FilePath, "r");
     char c;
     long pos = -1;
     while ((c = fgetc(f_NC_008253)) != '\n' && c != EOF); // 读掉第一行
     char* NC_008253String = malloc(NC_008253Length * sizeof(char) + 1); // 申请内存放置源字符串
+    long l_x[4] = {0};
     while ((c = fgetc(f_NC_008253)) != EOF && pos <= NC_008253Length) {
-        if (c == 'A' || c == 'a' || c == 'C' || c == 'c' || c == 'G' || c == 'g' || c == 'T' || c == 't')
+        if (c == 'A' || c == 'a' || c == 'C' || c == 'c' || c == 'G' || c == 'g' || c == 'T' || c == 't') {
             NC_008253String[++pos] = c;
+            if (c == 'A' || c == 'a') {
+                l_x[0] ++;
+            }
+            else if (c == 'C' || c == 'c') {
+                l_x[1] ++;
+            }
+            else if (c == 'G' || c == 'g') {
+                l_x[2] ++;
+            }
+        }
         else
             continue;
     }
+    l_x[3] = 1 + l_x[2] + l_x[1] + l_x[0];
+    l_x[2] = 1 + l_x[1] + l_x[0];
+    l_x[1] = 1 + l_x[0];
+    l_x[0] = 0;
     NC_008253String[++pos] = '\0';
     printf("NC_008253String length: %ld\n", strlen(NC_008253String));
     long NC_008253CompressedLength = NC_008253Length;
@@ -208,6 +247,18 @@ void testHonSaPsi() {
     long** result = HonSaPsi(NC_008253CompressedString, NC_008253Length);
     clock_t time1 = clock() - time;
     printf("compute SA and psi time: %lfs\n", (double)time1 / CLOCKS_PER_SEC);
+    printf("checking answer...\n");
+    char* rebuildedString = BuildStrFromPsi(result[1], NC_008253Length, "ACGT", l_x);
+    // printf("truth\t%s\n", NC_008253String);
+    // printf("yours\t%s\n", rebuildedString);
+    // printf("your SA:\t"); for (long i = 0; i < NC_008253Length + 1; ++i) {printf("%ld\t", result[0][i]);} printf("\n");
+    long i;
+    for (i = 0; i < NC_008253Length; ++i) {
+        if (rebuildedString[i] != NC_008253String[i]) {
+            fprintf(stderr, "false at pos %ld!\n", i);
+        }
+    }
+    if (i == NC_008253Length) printf("answer is right!\n");
 
     fclose(f_NC_008253);
     free(NC_008253String);
@@ -216,6 +267,16 @@ void testHonSaPsi() {
     free(result[1]);
     free(result);
 }
+
+void testBuildStrFromPsi() {
+    // 使用csa论文中T1Tprime的例子(Fig. 2.右侧的图)
+    long psi[9] = {8, 4, 6, 7, 0, 2, 3, 1, 5};
+    long length = 8;
+    char* charSet = "ACGT";
+    long l_x[4] = {1, 4, 7, 9};
+    printf("%s\n", BuildStrFromPsi(psi, length, charSet, l_x));
+}
+
 int main() {
 
     // Hello();
@@ -223,8 +284,9 @@ int main() {
     // testCompute2BitStrLength();
     // testCompressDecompressRetrieve();
     // testQuickSort10Intergers();
-    // testQuickNC_008253_fna();
+    testQuickNC_008253_fna();
     // testBinarySearch();
-    testHonSaPsi();
+    // testBuildStrFromPsi();
+    // testHonSaPsi();
     return 0;
 }

@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <time.h>
+#include <string.h>
 #include "dr_sort.h"
 #include "dr_tools.h"
 
@@ -31,16 +32,20 @@ int HonSaPsi_Caculate_Order_BinarySearch_Psi_CmpFunc(const void* target, long po
     else return 0;
 }
 long** HonSaPsi(const char* compressedString, long length) {
+
+    int debug_flag = 0;
+
     /* 拒绝处理空串 */
     if (length <= 0) {fprintf(stderr, "HonSaPsi: null string was inputed!\n"); exit(1);}
 
     /* 计算一些元信息 */
-    long lNormalSegmentLength = (long)log2((double)length);
+    long lNormalSegmentLength = length / (long)log2((double)length);
     // long lNormalSegmentLength = 5000;
     long lNumNormalSegment = length / lNormalSegmentLength;
     long lNormalSegmentTotalLength = lNumNormalSegment * lNormalSegmentLength;
     long lLastSegmentLength = length == lNormalSegmentTotalLength? lNormalSegmentLength : length - lNormalSegmentTotalLength;
-    printf("length:\t\t\t%ld\nnormal seg length:\t%ld\nnum normal seg:\t\t%ld\nlast seg length:\t%ld\nnormal seg total len:\t%ld\n", 
+    if (debug_flag == 1)
+        printf("length:\t\t\t%ld\nnormal seg length:\t%ld\nnum normal seg:\t\t%ld\nlast seg length:\t%ld\nnormal seg total len:\t%ld\n", 
         length, lNormalSegmentLength, lNumNormalSegment, lLastSegmentLength, lNormalSegmentTotalLength);
 
     /* 定义用于增量构建的变量 */
@@ -53,6 +58,7 @@ long** HonSaPsi(const char* compressedString, long length) {
     long TprimeLength;
     long* tempPsi_TiTprime = malloc(sizeof(long) * (length + 1));
     long* f = malloc(sizeof(long) * (length + 1));
+    long* f_order_couter = malloc(sizeof(long) * (length + 1));
     long* g = malloc(sizeof(long) * (lNormalSegmentLength + 1));
 
     // 处理第一块
@@ -60,7 +66,7 @@ long** HonSaPsi(const char* compressedString, long length) {
     psi_Tprime = BuildPsi_BinarySearch(compressedString, length - lLastSegmentLength, SA_Tprime, lLastSegmentLength);
     SA_Tprime = realloc(SA_Tprime, sizeof(long) * (length + 1));
     psi_Tprime = realloc(psi_Tprime, sizeof(long) * (length + 1));
-    // /*调试信息*/printf("first psi_Tprime");for (long i = 0; i < lLastSegmentLength + 1; ++i) {printf("%ld ", psi_Tprime[i]);} printf("\n");
+    // /*调试信息*/printf("first psi_Tprime: ");for (long i = 0; i < lLastSegmentLength + 1; ++i) {printf("%ld ", psi_Tprime[i]);} printf("\n");
     new_block_start_pos = length - lLastSegmentLength - lNormalSegmentLength;
     TprimeLength = lLastSegmentLength + 1;
     // 寻找初始块最长后缀在Tprime的SA中的rank，时间复杂度为O(logn) (线性搜索，搜索域长度为logn)
@@ -69,8 +75,7 @@ long** HonSaPsi(const char* compressedString, long length) {
         if (SA_Tprime[i] == 0) {lastOrder = i; break;}
     }
     
-    int debug_flag = 1;
-    long print_seg = 10000;
+    long print_seg = 220000;
     long print_count = new_block_start_pos / print_seg;
     int log_flag = 0; // 每隔print_seg长度，打印一轮log。log_flag会在对应轮开头设为1，结尾设为0
     time_t time_mid, time_lr=0, time_f=0, time_g=0, time_order=0, time_merge=0;
@@ -78,17 +83,19 @@ long** HonSaPsi(const char* compressedString, long length) {
         printf("start_pos\tlf\t\torder\t\tf\t\tg\t\tmerge\n");
     }
     for (; new_block_start_pos >= 0; new_block_start_pos -= lNormalSegmentLength) {
+        
+        /* initialize some temp variants */
+        memset(f_order_couter, 0, sizeof(long) * (length + 1));
+
         /* sort the suffixes suf_1, suf_2, ..., suf_l */
         SA_Ti = BuildSA_QuickSort_CompareToEnd(compressedString, new_block_start_pos, lNormalSegmentLength, length);
         psi_Ti = BuildPsi_BinarySearch_CompareToEnd(compressedString, new_block_start_pos, SA_Ti, lNormalSegmentLength, length);
 
-        long print_count_a = new_block_start_pos / print_seg;
-        if (print_count_a < print_count) {
-            print_count = print_count_a;
+        if (debug_flag == 1) {
             log_flag = 1;
-            
             printf("%ld\t\t", new_block_start_pos);
         }
+
         // /*调试信息*/ printf("************************** 新块起始位置:%ld ************************\n", new_block_start_pos);
         //             printf("新块内容: ");for(int i = new_block_start_pos;  i < new_block_start_pos + lNormalSegmentLength; ++i){printf("%c", RetrieveCompressBase(compressedString, i));}printf("\n");
         //             printf("即将处理: ");for(int i = new_block_start_pos;  i < length ; ++i){printf("%c", RetrieveCompressBase(compressedString, i));}printf("\n");        
@@ -108,14 +115,12 @@ long** HonSaPsi(const char* compressedString, long length) {
             tag[i*2] = BinarySearchLeftBound(1, TprimeLength, &target[i], HonSaPsi_BinarySearch_X_Region_CmpFunc);
             tag[i*2 + 1] = BinarySearchRightBound(1, TprimeLength, &target[i], HonSaPsi_BinarySearch_X_Region_CmpFunc);
         }
+        time_lr += clock()-time_mid;
+        time_mid = clock();
         if (log_flag == 1 && debug_flag) {
             printf("%lfs\t", (double)(time_lr) / CLOCKS_PER_SEC);
             time_lr = 0;
-        }
-        else {
-            time_lr += clock()-time_mid;
-            time_mid = clock();
-        }
+        }   
         // /*调试信息: l_c,r_c的内容*/printf("lc,rc: ");for (int i = 0; i < 4; ++i) {printf("%ld %ld ", tag[i*2], tag[i*2 + 1]);}printf("\n");
         /////* caculate order */
         for (long i = lNormalSegmentLength; i >= 1; --i) {
@@ -147,33 +152,29 @@ long** HonSaPsi(const char* compressedString, long length) {
             }
             // /*调试信息*/printf("suf%ld\tc:%c\tl:%ld\tr:%ld\tlastOrder:%ld\torder:%ld\t\n", i, c, tag[2*tag_pos], tag[2*tag_pos+1], lastOrder, max_b);
             order[i] = max_b;
+            f_order_couter[max_b] += 1;
             lastOrder = order[i];
         }
+        time_order += clock()-time_mid;
+        time_mid = clock();
         if (log_flag == 1 && debug_flag) {
             printf("%lfs\t", (double)(time_order) / CLOCKS_PER_SEC);
             time_order = 0;
         }
-        else {
-            time_order += clock()-time_mid;
-            time_mid = clock();
-        }
         /* computer the pai function for T^iT' */
         //// compute f and g
         ////// compute f
-        for (long j = 0; j <= TprimeLength; ++j) {
-            long count = 0;
-            for (long k = 1; k <= lNormalSegmentLength; ++k) {
-                if (order[k] < j) ++count;
-            }
+        long count = 0;
+        f[0] = 0;
+        for (long j = 1; j <= TprimeLength; ++j) {
+            count += f_order_couter[j-1];
             f[j] = j + count;
         }
+        time_f += clock()-time_mid;
+        time_mid = clock();
         if (log_flag == 1 && debug_flag) {
             printf("%lfs\t", (double)(time_f) / CLOCKS_PER_SEC);
             time_f = 0;
-        }
-        else {
-            time_f += clock()-time_mid;
-            time_mid = clock();
         }
         ////// compute g
         long rank = 0;
@@ -181,13 +182,11 @@ long** HonSaPsi(const char* compressedString, long length) {
             rank = psi_Ti[rank];
             g[j] = order[j] + rank;
         }
+        time_g += clock()-time_mid;
+        time_mid = clock();
         if (log_flag == 1 && debug_flag) {
             printf("%lfs\t", (double)(time_g) / CLOCKS_PER_SEC);
             time_g = 0;
-        }
-        else {
-            time_g += clock()-time_mid;
-            time_mid = clock();
         }
         // /*调试信息：order*/for (long j = 1; j <= lNormalSegmentLength; ++j){printf("order[%ld]:%ld ", j, order[j]);}printf("\n");
         // /*调试信息：f*/for (long j = 1; j < TprimeLength; ++j){printf("f[%ld]:%ld ", j, f[j]);}printf("\n");
@@ -209,22 +208,20 @@ long** HonSaPsi(const char* compressedString, long length) {
         lastOrder = psi_Tprime[0];
         TprimeLength += lNormalSegmentLength;
         
+        time_merge += clock()-time_mid;
+        time_mid = clock();
         if (log_flag == 1 && debug_flag) {
             printf("%lfs\n", (double)(time_merge) / CLOCKS_PER_SEC);
             time_merge = 0;
         }
-        else {
-            time_merge += clock()-time_mid;
-            time_mid = clock();
-        }
 
         /* 根据merge后的psi_Tprime构造新的SA_Tprime */
-        // SA_Tprime = realloc(SA_Tprime, sizeof(long) * TprimeLength);
         long mergeSA_pos = 0;
-        for (long i = 0; i < TprimeLength; ++i) {
+        for (long i = 0; i < TprimeLength-1; ++i) {
             mergeSA_pos = psi_Tprime[mergeSA_pos];
             SA_Tprime[mergeSA_pos] = i;
         }
+        SA_Tprime[0] = TprimeLength-1;
 
         // /*调试信息*/printf("merge后的psi_Tprime:\t");for (long i = 0; i < TprimeLength; ++i) {printf("%ld ", psi_Tprime[i]);}printf("\n");
         // /*调试信息*/printf("merge后的SA_Tprime:\t");for (long i = 0; i < TprimeLength; ++i) {printf("%ld ", SA_Tprime[i]);}printf("\n");
@@ -240,6 +237,7 @@ long** HonSaPsi(const char* compressedString, long length) {
     free(f);
     free(g);
     free(tempPsi_TiTprime);
+    free(f_order_couter);
     
     /* 返回结果 */
     long** result = malloc(sizeof(long*) * 2);

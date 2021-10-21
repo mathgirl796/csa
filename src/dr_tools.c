@@ -222,7 +222,8 @@ long* BuildPsi_BinarySearch(const char* compressedString, long start_pos, const 
     psi[0] = BinarySearch(0, SA_size, &target, BuildPsi_BinarySearch_CmpFunc);
     for (long i = 1; i < SA_size; ++i) {
         target = SA[i] + 1 + start_pos;
-        psi[i] = BinarySearch(0, SA_size, &target, BuildPsi_BinarySearch_CmpFunc);
+        psi[i] = BinarySearch(1, SA_size, &target, BuildPsi_BinarySearch_CmpFunc);
+        if (psi[i] == BINARY_SEARCH_NOT_FOUND) psi[i] = start_pos;
     }
     return psi;
 }
@@ -240,7 +241,7 @@ long* BuildPsi_BinarySearch_CompareToEnd(const char* compressedString, long star
     for (long i = 1; i < SA_size; ++i) {
         target = SA[i] + 1 + start_pos;
         psi[i] = BinarySearch(1, SA_size, &target, BuildPsi_BinarySearch_CmpFunc);
-        if (psi[i] == BINARY_SEARCH_NOT_FOUND) psi[i] = 0;
+        if (psi[i] == BINARY_SEARCH_NOT_FOUND) psi[i] = start_pos;
     }
     return psi;
 }
@@ -251,4 +252,22 @@ long RetriveRankFromPsi(const long* psi, long target) {
         rank = psi[rank];
     }
     return rank;
+}
+
+
+char* BuildStrFromPsi(const long* psi, long length, const char* characterSet, const long l_x[4])
+{
+    long pos = psi[0];
+    char* retString = malloc(sizeof(char) * length);
+
+    for (long i = 0; i < length; ++i) {
+        if (l_x[0] <= pos && pos < l_x[1]) retString[i] = characterSet[0];
+        else if (l_x[1] <= pos && pos < l_x[2]) retString[i] = characterSet[1];
+        else if (l_x[2] <= pos && pos < l_x[3]) retString[i] = characterSet[2];
+        else if (l_x[3] <= pos && pos <= length) retString[i] = characterSet[3];
+        else retString[i] = 'N';
+        pos = psi[pos];
+    }
+
+    return retString;
 }

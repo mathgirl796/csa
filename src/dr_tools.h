@@ -110,5 +110,21 @@ long* BuildPsi_BinarySearch_CompareToEnd(const char* compressedString, long star
 */
 long RetriveRankFromPsi(const long* psi, long target);
 
+/*
+    Build acgtString from a psi array
+
+    input:
+        psi: an array whose length is (length + 1)
+        length: the length of acgtString correspond to psi, often len(psi) - 1
+        characterSet: substring of 'ACGT'
+        l_x: 0-base start pos of ACGT region in your psi
+    output:
+        char array of 'A','C','G','T' whose length is length
+
+    instructions:
+        if your characterSet is shorter than the detected characterSet of psi, output would be strange
+        please make sure your characterSet is right especially when its length is less than 4
+*/
+char* BuildStrFromPsi(const long* psi, long length, const char* characterSet, const long l_x[4]); 
 
 #endif
