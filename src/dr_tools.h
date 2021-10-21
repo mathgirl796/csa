@@ -82,7 +82,7 @@ long* CountFasta(const char* filePath);
         it is a permutation of [0, length]
 */
 long* BuildSA_QuickSort(const char* compressedString, long start_pos, long length);
-
+long* BuildSA_QuickSort_CompareToEnd(const char* compressedString, long start_pos, long length, long compressedStringLength);
 /*
     build Psi array from an SA
 
@@ -96,7 +96,7 @@ long* BuildSA_QuickSort(const char* compressedString, long start_pos, long lengt
         it is a permutation of [0, length]
 */
 long* BuildPsi_BinarySearch(const char* compressedString, long start_pos, const long* SA, long length);
-
+long* BuildPsi_BinarySearch_CompareToEnd(const char* compressedString, long start_pos, const long* SA, long length, long compressedStringLength);
 
 /*
     find RANK[target] in a psi array
@@ -109,4 +109,6 @@ long* BuildPsi_BinarySearch(const char* compressedString, long start_pos, const 
         RANK[target] of the SA correspond to your psi
 */
 long RetriveRankFromPsi(const long* psi, long target);
+
+
 #endif

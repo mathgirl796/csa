@@ -1,12 +1,13 @@
 #include <stdio.h>
 #include <limits.h>
-
+#include <stdlib.h>
 
 int main(){
 
-    int a = 1;
-    int b = 2;
-    const int *p = &a;
-    p = &b;
-    return 0;
+    char* a = malloc(2);
+    char* b = malloc(3);
+    free(a);
+    a = b;
+    free(b);
+    printf("%ld\n", LONG_MAX);
 }

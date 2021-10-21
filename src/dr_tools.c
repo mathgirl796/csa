@@ -61,7 +61,7 @@ long Compute2BitStrLength(long byteStringLength) {
 // rule: ['a': b'00', 'c': b'01', 'g': b'10', 't': b'11']
 // acgtString "123456789" will be converted to "'1234','5678','9xxx'"
 char* CompressBase(const char* acgtString, long* length) {
-    long strLength = strlen(acgtString);
+    long strLength = *length;
     long realStringLength = strLength > *length ? strLength : *length;
     long retStringLength = Compute2BitStrLength(realStringLength);
     char* ret = malloc(retStringLength * sizeof(char));
@@ -85,7 +85,7 @@ char* CompressBase(const char* acgtString, long* length) {
                 case 'T': 
                 case 't': select = 3; break;
                 default:
-                    fprintf(stderr, "CompressBase: unexpected character %c", acgtString[sPos]);
+                    fprintf(stderr, "CompressBase: unexpected character %d at string pos %ld\n", acgtString[sPos], sPos);
                     exit(1);
             }
             buffer += select << (3-i) * 2;
@@ -164,9 +164,22 @@ int BuildSA_QuickSort_CmpFunc(long l, long r) {
         exit(1);
     }
 }
+
 long* BuildSA_QuickSort(const char* compressedString, long start_pos, long length) {
     BuildSA_QuickSort_CompressedArray = compressedString;
     BuildSA_QuickSort_MaxCmpPos = start_pos + length;
+    long* quickSortResult = QuickSort(start_pos, start_pos+length, BuildSA_QuickSort_CmpFunc, SimpleQuickSortPartition);
+    for (long i = 0; i < length; ++i) quickSortResult[i] -= start_pos;
+    long* SA = malloc(sizeof(long) * (length + 1));
+    SA[0] = length;
+    memcpy(SA + 1, quickSortResult, sizeof(long) * length);    
+    free(quickSortResult);
+    return SA;
+}
+
+long* BuildSA_QuickSort_CompareToEnd(const char* compressedString, long start_pos, long length, long compressedStringLength) {
+    BuildSA_QuickSort_CompressedArray = compressedString;
+    BuildSA_QuickSort_MaxCmpPos = compressedStringLength;
     long* quickSortResult = QuickSort(start_pos, start_pos+length, BuildSA_QuickSort_CmpFunc, SimpleQuickSortPartition);
     for (long i = 0; i < length; ++i) quickSortResult[i] -= start_pos;
     long* SA = malloc(sizeof(long) * (length + 1));
@@ -184,6 +197,7 @@ long BuildPsi_BinarySearch_CompressedString_StartPos = 0;
 int BuildPsi_BinarySearch_CmpFunc(const void* target, long pos) {
     long l = *(long*)target;
     long r = BuildPsi_BinarySearch_SA[pos] + BuildPsi_BinarySearch_CompressedString_StartPos;
+    if (l == r) return 0;
     // printf("%ld %ld\n", l, r); // 打印调试信息
     while (l < BuildPsi_BinarySearch_CompressedString_MaxCmpPos && r < BuildPsi_BinarySearch_CompressedString_MaxCmpPos) {
         char lchar = RetrieveCompressBase(BuildPsi_BinarySearch_CompressedArray, l);
@@ -209,6 +223,24 @@ long* BuildPsi_BinarySearch(const char* compressedString, long start_pos, const 
     for (long i = 1; i < SA_size; ++i) {
         target = SA[i] + 1 + start_pos;
         psi[i] = BinarySearch(0, SA_size, &target, BuildPsi_BinarySearch_CmpFunc);
+    }
+    return psi;
+}
+
+long* BuildPsi_BinarySearch_CompareToEnd(const char* compressedString, long start_pos, const long* SA, long length, long compressedStringLength) {
+    BuildPsi_BinarySearch_CompressedArray = compressedString;
+    BuildPsi_BinarySearch_CompressedString_StartPos = start_pos;
+    BuildPsi_BinarySearch_CompressedString_MaxCmpPos = compressedStringLength;
+    BuildPsi_BinarySearch_SA = SA;
+    long SA_size = length + 1;
+    long* psi = malloc(sizeof(long) * (length + 1));
+    long target = start_pos;
+    /* psi[0]是特殊情况 */
+    psi[0] = BinarySearch(1, SA_size, &target, BuildPsi_BinarySearch_CmpFunc);
+    for (long i = 1; i < SA_size; ++i) {
+        target = SA[i] + 1 + start_pos;
+        psi[i] = BinarySearch(1, SA_size, &target, BuildPsi_BinarySearch_CmpFunc);
+        if (psi[i] == BINARY_SEARCH_NOT_FOUND) psi[i] = 0;
     }
     return psi;
 }
