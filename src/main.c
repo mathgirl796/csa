@@ -287,6 +287,6 @@ int main() {
     testQuickNC_008253_fna();
     // testBinarySearch();
     // testBuildStrFromPsi();
-    // testHonSaPsi();
+    testHonSaPsi();
     return 0;
 }
