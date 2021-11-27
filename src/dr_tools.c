@@ -1,10 +1,5 @@
 #include "dr_tools.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <ctype.h>
-#include <string.h>
-#include "dr_sort.h"
 
 void Hello(void) {
     printf("Hello, world!\n");
@@ -223,7 +218,7 @@ long* BuildPsi_BinarySearch(const char* compressedString, long start_pos, const 
     for (long i = 1; i < SA_size; ++i) {
         target = SA[i] + 1 + start_pos;
         psi[i] = BinarySearch(1, SA_size, &target, BuildPsi_BinarySearch_CmpFunc);
-        if (psi[i] == BINARY_SEARCH_NOT_FOUND) psi[i] = start_pos;
+        if (psi[i] == BINARY_SEARCH_NOT_FOUND) psi[i] = 0;
     }
     return psi;
 }
@@ -241,7 +236,7 @@ long* BuildPsi_BinarySearch_CompareToEnd(const char* compressedString, long star
     for (long i = 1; i < SA_size; ++i) {
         target = SA[i] + 1 + start_pos;
         psi[i] = BinarySearch(1, SA_size, &target, BuildPsi_BinarySearch_CmpFunc);
-        if (psi[i] == BINARY_SEARCH_NOT_FOUND) psi[i] = start_pos;
+        if (psi[i] == BINARY_SEARCH_NOT_FOUND) psi[i] = 0;
     }
     return psi;
 }
@@ -271,3 +266,75 @@ char* BuildStrFromPsi(const long* psi, long length, const char* characterSet, co
 
     return retString;
 }
+
+char* readline(FILE* f, long* plength) {
+    char ch = EOF;
+    long len = 0;
+    char* str;
+
+    while (1) {
+        ch = fgetc(f);
+        if (ch == EOF || ch == '\r' || ch == '\n') {
+            break;
+        }
+        len ++;
+    }
+    if (ch == EOF) fseek(f, -len, SEEK_CUR);
+    else fseek(f, -1-len, SEEK_CUR);
+    str = calloc(len + 1, sizeof(char));
+    long i;
+    for (i = 0; i < len; ++i) {
+        str[i] = fgetc(f);
+    }
+    str[len] = 0;
+    while (1) {
+        ch = fgetc(f);
+        if (ch == EOF) break;
+        else if (ch != '\r' && ch != '\n') {
+            if (ch != EOF) fseek(f, -1, SEEK_CUR);
+            break;
+        }
+    }
+    if (plength != NULL) *plength = len;
+    return str;
+}
+
+void add_read(struct read** reads, char* name, char* seq, long length){
+    struct read* read = malloc(sizeof(struct read));
+    read->name = name;
+    read->seq = seq;
+    read->length = length;
+    HASH_ADD_KEYPTR(hh, *reads, read->name, strlen(read->name), read);
+}
+
+void ReadFastq(char* filePath, struct read** reads, struct read** qualities) {
+    FILE* f = fopen(filePath,  "rb");
+
+    if (reads != NULL) *reads = NULL;
+    if (qualities != NULL) *qualities = NULL;
+    
+    char ch;
+    long i;
+
+    while ((ch = fgetc(f)) != EOF) {
+
+        char *name, *seq, *quality;
+        long length;
+
+        name = readline(f, NULL);
+        seq = readline(f, &length);
+        readline(f, NULL);
+        quality = readline(f, NULL);
+        
+        if (reads != NULL) add_read(reads, name, seq, length);
+        if (qualities != NULL) add_read(qualities, name, quality, length);
+
+        // printf("%d\t%s\t%s\t%s\n", length, name, seq, quality);
+    }
+}
+
+void ReadFasta(char* filePath, struct read** reads);
+
+
+
+long* CountFastq(const char* filePath);

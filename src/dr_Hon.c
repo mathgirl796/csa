@@ -33,7 +33,8 @@ int HonSaPsi_Caculate_Order_BinarySearch_Psi_CmpFunc(const void* target, long po
 }
 long** HonSaPsi(const char* compressedString, long length) {
 
-    int debug_flag = 0;
+    int debug_time_flag = 0;
+    int debug_logic_flag = 1;
 
     /* 拒绝处理空串 */
     if (length <= 0) {fprintf(stderr, "HonSaPsi: null string was inputed!\n"); exit(1);}
@@ -44,7 +45,7 @@ long** HonSaPsi(const char* compressedString, long length) {
     long lNumNormalSegment = length / lNormalSegmentLength;
     long lNormalSegmentTotalLength = lNumNormalSegment * lNormalSegmentLength;
     long lLastSegmentLength = length == lNormalSegmentTotalLength? lNormalSegmentLength : length - lNormalSegmentTotalLength;
-    if (debug_flag == 1)
+    if (debug_time_flag == 1)
         printf("length:\t\t\t%ld\nnormal seg length:\t%ld\nnum normal seg:\t\t%ld\nlast seg length:\t%ld\nnormal seg total len:\t%ld\n", 
         length, lNormalSegmentLength, lNumNormalSegment, lLastSegmentLength, lNormalSegmentTotalLength);
 
@@ -66,7 +67,9 @@ long** HonSaPsi(const char* compressedString, long length) {
     psi_Tprime = BuildPsi_BinarySearch(compressedString, length - lLastSegmentLength, SA_Tprime, lLastSegmentLength);
     SA_Tprime = realloc(SA_Tprime, sizeof(long) * (length + 1));
     psi_Tprime = realloc(psi_Tprime, sizeof(long) * (length + 1));
-    // /*调试信息*/printf("first psi_Tprime: ");for (long i = 0; i < lLastSegmentLength + 1; ++i) {printf("%ld ", psi_Tprime[i]);} printf("\n");
+    if (debug_logic_flag == 1){
+        /*调试信息*/printf("first psi_Tprime: ");for (long i = 0; i < lLastSegmentLength + 1; ++i) {printf("%ld ", psi_Tprime[i]);} printf("\n");
+    }
     new_block_start_pos = length - lLastSegmentLength - lNormalSegmentLength;
     TprimeLength = lLastSegmentLength + 1;
     // 寻找初始块最长后缀在Tprime的SA中的rank，时间复杂度为O(logn) (线性搜索，搜索域长度为logn)
@@ -79,7 +82,7 @@ long** HonSaPsi(const char* compressedString, long length) {
     long print_count = new_block_start_pos / print_seg;
     int log_flag = 0; // 每隔print_seg长度，打印一轮log。log_flag会在对应轮开头设为1，结尾设为0
     time_t time_mid, time_lr=0, time_f=0, time_g=0, time_order=0, time_merge=0;
-    if (debug_flag == 1) {
+    if (debug_time_flag == 1) {
         printf("start_pos\tlf\t\torder\t\tf\t\tg\t\tmerge\n");
     }
     for (; new_block_start_pos >= 0; new_block_start_pos -= lNormalSegmentLength) {
@@ -91,17 +94,19 @@ long** HonSaPsi(const char* compressedString, long length) {
         SA_Ti = BuildSA_QuickSort_CompareToEnd(compressedString, new_block_start_pos, lNormalSegmentLength, length);
         psi_Ti = BuildPsi_BinarySearch_CompareToEnd(compressedString, new_block_start_pos, SA_Ti, lNormalSegmentLength, length);
 
-        if (debug_flag == 1) {
+        if (debug_time_flag == 1) {
             log_flag = 1;
             printf("%ld\t\t", new_block_start_pos);
         }
 
-        // /*调试信息*/ printf("************************** 新块起始位置:%ld ************************\n", new_block_start_pos);
-        //             printf("新块内容: ");for(int i = new_block_start_pos;  i < new_block_start_pos + lNormalSegmentLength; ++i){printf("%c", RetrieveCompressBase(compressedString, i));}printf("\n");
-        //             printf("即将处理: ");for(int i = new_block_start_pos;  i < length ; ++i){printf("%c", RetrieveCompressBase(compressedString, i));}printf("\n");        
-        // /* 调试信息：psi_Ti的内容 */printf("psi_Ti\t");for(int i=0;i<lNormalSegmentLength+1;++i){printf("%ld ",psi_Ti[i]);}printf("\n");
-        // /* 调试信息：psi_Ti的内容 */printf("SA_Ti\t");for(int i=0;i<lNormalSegmentLength+1;++i){printf("%ld ",SA_Ti[i]);}printf("\n");
-
+        if (debug_logic_flag == 1) {
+            /*调试信息*/ printf("************************** 新块起始位置:%ld ************************\n", new_block_start_pos);
+                    printf("新块内容: ");for(int i = new_block_start_pos;  i < new_block_start_pos + lNormalSegmentLength; ++i){printf("%c", RetrieveCompressBase(compressedString, i));}printf("\n");
+                    printf("即将处理: ");for(int i = new_block_start_pos;  i < length ; ++i){printf("%c", RetrieveCompressBase(compressedString, i));}printf("\n");        
+            /* 调试信息：psi_Ti的内容 */printf("psi_Ti\t");for(int i=0;i<lNormalSegmentLength+1;++i){printf("%ld ",psi_Ti[i]);}printf("\n");
+            /* 调试信息：psi_Ti的内容 */printf("SA_Ti\t");for(int i=0;i<lNormalSegmentLength+1;++i){printf("%ld ",SA_Ti[i]);}printf("\n");
+        }
+        
         time_mid = clock();
         /* for every suf_i, calculate order(suf_i, T') */
         /////* binary search to find l_x and r_x */
@@ -117,11 +122,13 @@ long** HonSaPsi(const char* compressedString, long length) {
         }
         time_lr += clock()-time_mid;
         time_mid = clock();
-        if (log_flag == 1 && debug_flag) {
+        if (log_flag == 1 && debug_time_flag) {
             printf("%lfs\t", (double)(time_lr) / CLOCKS_PER_SEC);
             time_lr = 0;
         }   
-        // /*调试信息: l_c,r_c的内容*/printf("lc,rc: ");for (int i = 0; i < 4; ++i) {printf("%ld %ld ", tag[i*2], tag[i*2 + 1]);}printf("\n");
+        if (debug_logic_flag == 1) {
+            /*调试信息: l_c,r_c的内容*/printf("lc,rc: ");for (int i = 0; i < 4; ++i) {printf("%ld %ld ", tag[i*2], tag[i*2 + 1]);}printf("\n");
+        }
         /////* caculate order */
         for (long i = lNormalSegmentLength; i >= 1; --i) {
             char c = RetrieveCompressBase(compressedString, new_block_start_pos + i - 1);
@@ -150,14 +157,16 @@ long** HonSaPsi(const char* compressedString, long length) {
                     max_b = tag[2*tag_pos] - 1; 
                 }
             }
-            // /*调试信息*/printf("suf%ld\tc:%c\tl:%ld\tr:%ld\tlastOrder:%ld\torder:%ld\t\n", i, c, tag[2*tag_pos], tag[2*tag_pos+1], lastOrder, max_b);
+            if (debug_logic_flag == 1) {
+                /*调试信息*/printf("suf%ld\tc:%c\tl:%ld\tr:%ld\tlastOrder:%ld\torder:%ld\t\n", i, c, tag[2*tag_pos], tag[2*tag_pos+1], lastOrder, max_b);
+            }
             order[i] = max_b;
             f_order_couter[max_b] += 1;
             lastOrder = order[i];
         }
         time_order += clock()-time_mid;
         time_mid = clock();
-        if (log_flag == 1 && debug_flag) {
+        if (log_flag == 1 && debug_time_flag) {
             printf("%lfs\t", (double)(time_order) / CLOCKS_PER_SEC);
             time_order = 0;
         }
@@ -172,7 +181,7 @@ long** HonSaPsi(const char* compressedString, long length) {
         }
         time_f += clock()-time_mid;
         time_mid = clock();
-        if (log_flag == 1 && debug_flag) {
+        if (log_flag == 1 && debug_time_flag) {
             printf("%lfs\t", (double)(time_f) / CLOCKS_PER_SEC);
             time_f = 0;
         }
@@ -184,14 +193,16 @@ long** HonSaPsi(const char* compressedString, long length) {
         }
         time_g += clock()-time_mid;
         time_mid = clock();
-        if (log_flag == 1 && debug_flag) {
+        if (log_flag == 1 && debug_time_flag) {
             printf("%lfs\t", (double)(time_g) / CLOCKS_PER_SEC);
             time_g = 0;
         }
-        // /*调试信息：order*/for (long j = 1; j <= lNormalSegmentLength; ++j){printf("order[%ld]:%ld ", j, order[j]);}printf("\n");
-        // /*调试信息：f*/for (long j = 1; j < TprimeLength; ++j){printf("f[%ld]:%ld ", j, f[j]);}printf("\n");
-        // /*调试信息：g*/for (long j = 1; j <= lNormalSegmentLength; ++j){printf("g[%ld]:%ld ", j, g[j]);}printf("\n");
-
+        if (debug_logic_flag == 1) {
+            /*调试信息：order*/for (long j = 1; j <= lNormalSegmentLength; ++j){printf("order[%ld]:%ld ", j, order[j]);}printf("\n");
+            /*调试信息：f*/for (long j = 1; j < TprimeLength; ++j){printf("f[%ld]:%ld ", j, f[j]);}printf("\n");
+            /*调试信息：g*/for (long j = 1; j <= lNormalSegmentLength; ++j){printf("g[%ld]:%ld ", j, g[j]);}printf("\n");
+        }
+        
         //// merge and update lastOrder
         tempPsi_TiTprime[0] = g[1];
         tempPsi_TiTprime[g[lNormalSegmentLength]] = f[psi_Tprime[0]];
@@ -201,7 +212,9 @@ long** HonSaPsi(const char* compressedString, long length) {
         for (long j = 1; j < lNormalSegmentLength; ++j) {
             tempPsi_TiTprime[g[j]] = g[j+1];
         }
-        // /*调试信息*/printf("psi_Tprime\t");for(int i=0;i<TprimeLength;i++){printf("%ld ",psi_Tprime[i]);}printf("\n");
+        if (debug_logic_flag == 1){
+            /*调试信息*/printf("psi_Tprime\t");for(int i=0;i<TprimeLength;i++){printf("%ld ",psi_Tprime[i]);}printf("\n");
+        }
         long* tempSwitchPsi = tempPsi_TiTprime;
         tempPsi_TiTprime = psi_Tprime;
         psi_Tprime = tempSwitchPsi;
@@ -210,7 +223,7 @@ long** HonSaPsi(const char* compressedString, long length) {
         
         time_merge += clock()-time_mid;
         time_mid = clock();
-        if (log_flag == 1 && debug_flag) {
+        if (log_flag == 1 && debug_time_flag) {
             printf("%lfs\n", (double)(time_merge) / CLOCKS_PER_SEC);
             time_merge = 0;
         }
@@ -223,9 +236,10 @@ long** HonSaPsi(const char* compressedString, long length) {
         }
         SA_Tprime[0] = TprimeLength-1;
 
-        // /*调试信息*/printf("merge后的psi_Tprime:\t");for (long i = 0; i < TprimeLength; ++i) {printf("%ld ", psi_Tprime[i]);}printf("\n");
-        // /*调试信息*/printf("merge后的SA_Tprime:\t");for (long i = 0; i < TprimeLength; ++i) {printf("%ld ", SA_Tprime[i]);}printf("\n");
-        // /*调试信息*/break;
+        if (debug_logic_flag == 1){
+            /*调试信息*/printf("merge后的psi_Tprime:\t");for (long i = 0; i < TprimeLength; ++i) {printf("%ld ", psi_Tprime[i]);}printf("\n");
+            /*调试信息*/printf("merge后的SA_Tprime:\t");for (long i = 0; i < TprimeLength; ++i) {printf("%ld ", SA_Tprime[i]);}printf("\n");
+        }
         log_flag = 0;
         // getchar();
     }

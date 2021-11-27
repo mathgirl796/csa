@@ -1,6 +1,12 @@
 #ifndef DR_TOOLS_H
 #define DR_TOOLS_H
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <ctype.h>
+#include <string.h>
+#include "dr_sort.h"
+#include "utlib/uthash.h"
 /*
     simply print "Hello world!" to default output stream.
 */
@@ -61,7 +67,7 @@ long Compute2BitStrLength(long byteStringLength);
 
 /*
     return the number of reads and lengthes of each fasta string 
-    in the input file in order
+    in the input file in order without read the file into memory
 
     input:
         filePath: path of a fasta format file
@@ -126,5 +132,61 @@ long RetriveRankFromPsi(const long* psi, long target);
         please make sure your characterSet is right especially when its length is less than 4
 */
 char* BuildStrFromPsi(const long* psi, long length, const char* characterSet, const long l_x[4]); 
+
+
+struct read {
+    char* name;
+    char* seq;
+    long length;
+    UT_hash_handle hh;
+};
+
+void add_read(struct read** reads, char* name, char* seq, long length);
+
+/*
+    read a fastq file into two separate hash tables
+
+    input:
+        filePath:   path to a fastq format file
+    output:
+        reads:      hashtable, key is seq name, value is read (if you don't need it , just convey a NULL pointer)
+        qualities:  hashtable, key is seq name, value is quality string (if you don't need it , just convey a NULL pointer)
+*/
+void ReadFastq(char* filePath, struct read** reads, struct read** qualities);
+
+
+/*
+    return the number of reads and lengthes of each fasta string 
+    in the input file in order without read the file into memory
+
+    input:
+        filePath: path of a fasta format file
+    output: array of type LONG, first element represents the number of reads
+        others represent lengthes of each fasta string
+        in the input file in order
+*/
+long* CountFastq(const char* filePath);
+
+
+/*
+    read a fasta file into a hash table
+
+    input:
+        filePath:   path to a fastq format file
+    output:
+        reads:      hashtable, key is seq name, value is read
+*/
+void ReadFasta(char* filePath, struct read** reads);
+
+/*
+    read a line of string from file
+
+    input:
+        f: a fp opened with "r"
+    output:
+        length: length of readed line (if you don't need it , just convey a NULL pointer)
+        string: a pointer to memory where the string stores (we don't need a buffer)
+*/
+char* readline(FILE* f, long* plength);
 
 #endif
